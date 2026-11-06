@@ -1,0 +1,22 @@
+# Use a slim Python base image
+FROM python:3.11-slim
+
+# Avoid creating .pyc files and enable real-time logs
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Set working directory
+WORKDIR /app
+
+# Install required Python packages
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the full app and model
+COPY . .
+
+# Expose the port FastAPI will run on
+EXPOSE 8001
+
+# Run the FastAPI app with uvicorn
+CMD ["uvicorn", "fastapi_model_Forest:app", "--host", "0.0.0.0", "--port", "8001"]

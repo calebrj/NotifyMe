@@ -1,0 +1,148 @@
+# --- FastAPI Model Forest (port 8001) ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-model-forest-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fastapi-model-forest
+  template:
+    metadata:
+      labels:
+        app: fastapi-model-forest
+    spec:
+      containers:
+      - name: fastapi-model
+        image: capstonenotifyme.azurecr.io/model_forest_fastapi-image:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-model-forest-service
+spec:
+  selector:
+    app: fastapi-model-forest
+  ports:
+  - protocol: TCP
+    port: 8001
+    targetPort: 8001
+  type: ClusterIP
+
+# --- FastAPI Route App (port 8002) ---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-route-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fastapi-route
+  template:
+    metadata:
+      labels:
+        app: fastapi-route
+    spec:
+      containers:
+      - name: fastapi-route
+        image: capstonenotifyme.azurecr.io/route_fastapi-image:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8002
+        envFrom:
+        - secretRef:
+            name: node-env-secret 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-route-service
+spec:
+  selector:
+    app: fastapi-route
+  ports:
+  - protocol: TCP
+    port: 8002
+    targetPort: 8002
+  type: ClusterIP
+
+# --- FastAPI Model CNN App (port 8003) ---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-model-cnn-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fastapi-model-cnn
+  template:
+    metadata:
+      labels:
+        app: fastapi-model-cnn
+    spec:
+      containers:
+      - name: fastapi-model-cnn
+        image: capstonenotifyme.azurecr.io/model_cnn_fastapi-image:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-model-cnn-service
+spec:
+  selector:
+    app: fastapi-model-cnn
+  ports:
+  - protocol: TCP
+    port: 8003
+    targetPort: 8003
+  type: ClusterIP
+
+# --- Node.js Gateway (port 8000, LoadBalancer exposed) ---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-gateway
+  template:
+    metadata:
+      labels:
+        app: node-gateway
+    spec:
+      containers:
+      - name: node-gateway
+        image: capstonenotifyme.azurecr.io/server_fastapi-image:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - secretRef:
+            name: node-env-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-gateway-service
+spec:
+  selector:
+    app: node-gateway
+  type: LoadBalancer
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
