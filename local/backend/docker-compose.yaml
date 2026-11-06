@@ -1,0 +1,25 @@
+services:
+  model: 
+    build: 
+      context: .
+      dockerfile: dockerfile.model
+    ports:
+      - "8001:8001"
+
+  route:
+    build:
+      context: .
+      dockerfile: dockerfile.route
+    ports:
+      - "8002:8002"
+    env_file:
+      - .env
+
+  server:
+    build:
+      context: .
+      dockerfile: dockerfile.server
+    ports:
+      - "5000:5000"
+    environment:
+      - SERVER_PORT=5000
